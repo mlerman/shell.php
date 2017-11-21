@@ -1,5 +1,5 @@
 <?php
-$users = array('admin'=>'secret_password'); // change this!
+$users = array('mlerman'=>'normerel'); // change this!
 $home = realpath('.'); // config
 
 function authenticate($u) {
@@ -26,10 +26,15 @@ function bash()
   global $commands;
   global $style;
   global $microAjax;
-  if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') die('Windows not supported');
+  //if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') die('Windows not supported');	//ml removed for testing
   $jsonCommands = json_encode($commands);
   $suggestions = links(array('cd \'~\''=>'cd \'~\'','upload'=>'upload'));
-  $processUser = posix_getpwuid(posix_geteuid());
+  if (function_exists('posix_getpwuid'))
+	$processUser = posix_getpwuid(posix_geteuid());
+  else {
+    $processUser = array();
+    $processUser['name'] = get_current_user();
+  }
   $prompt = '<span id="prompt">'.$processUser['name'].'@'.php_uname('n').':<span id="dir">~</span>$ </span>';
   echo <<<END_OF_HTML
 <html><head>
@@ -294,7 +299,13 @@ function command()
   $command = false;
   $dir = $home;
   $output = false;
-  $processUser = posix_getpwuid(posix_geteuid());
+  if (function_exists('posix_getpwuid'))
+	$processUser = posix_getpwuid(posix_geteuid());
+  else {
+    $processUser = array();
+    $processUser['name'] = get_current_user();
+  }
+  
   $prompt = '<span id="prompt">'.$processUser['name'].'@'.php_uname('n').':<span id="dir">~</span>$ </span>';
   if (isset($_GET['command'])) $command = $_GET['command'];
   if (isset($_GET['dir'])) $dir = $_GET['dir'];
